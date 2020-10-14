@@ -1,9 +1,10 @@
 use glfw::{Action, Context, Key, WindowEvent};
 use glyph_brush::Text;
-use luminance::context::GraphicsContext as _;
+use luminance::context::GraphicsContext;
+use glyph_brush::Section;
 use luminance::pipeline::PipelineState;
 use luminance_glfw::GlfwSurface;
-use luminance_glyph::{ab_glyph, GlyphBrushBuilder, Section};
+use luminance_glyph::{ab_glyph, GlyphBrushBuilder};
 use luminance_windowing::{WindowDim, WindowOpt};
 use std::error::Error;
 
@@ -11,11 +12,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut surface = GlfwSurface::new_gl33(
         "Luminance Glyph",
         WindowOpt::default()
-            .set_num_samples(2)
-            .set_dim(WindowDim::Windowed {
-                width: 1024,
-                height: 720,
-            }),
+        .set_num_samples(2)
+        .set_dim(WindowDim::Windowed {
+            width: 1024,
+            height: 720,
+        }),
     )
     .expect("GLFW surface creation");
 
@@ -68,7 +69,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             &back_buffer,
             &PipelineState::default().set_clear_color([0.2, 0.2, 0.2, 1.0]),
             |mut pipeline, mut shd_gate| {
-                glyph_brush.draw_queued(&mut pipeline, &mut shd_gate, 1024, 720)
+                glyph_brush
+                    .draw_queued(&mut pipeline, &mut shd_gate, width as u32, height as u32)
             },
         );
 
