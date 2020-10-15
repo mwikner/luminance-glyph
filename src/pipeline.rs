@@ -89,15 +89,13 @@ impl Instance {
         if gl_rect.max.y > gl_bounds.max.y {
             let old_height = gl_rect.height();
             gl_rect.max.y = gl_bounds.max.y;
-            tex_coords.max.y =
-                tex_coords.min.y + tex_coords.height() * gl_rect.height() / old_height;
+            tex_coords.max.y = tex_coords.min.y + tex_coords.height() * gl_rect.height() / old_height;
         }
 
         if gl_rect.min.y < gl_bounds.min.y {
             let old_height = gl_rect.height();
             gl_rect.min.y = gl_bounds.min.y;
-            tex_coords.min.y =
-                tex_coords.max.y - tex_coords.height() * gl_rect.height() / old_height;
+            tex_coords.min.y = tex_coords.max.y - tex_coords.height() * gl_rect.height() / old_height;
         }
 
         Instance {
@@ -112,7 +110,7 @@ impl Instance {
 
 #[derive(UniformInterface)]
 struct ShaderInterface {
-    transform: Uniform<[[f32; 4]; 4]>,
+    window_dimensions: Uniform<[f32; 2]>,
     font_sampler: Uniform<TextureBinding<Dim2, NormUnsigned>>,
 }
 
@@ -140,7 +138,7 @@ impl Pipeline {
         &mut self,
         pipeline: &mut LuminancePipeline<'a>,
         shading_gate: &mut ShadingGate<'a>,
-        transform: [f32; 16],
+        window_dimensions: [u32; 2],
         _region: Option<Region>,
     ) -> Result<(), PipelineError> {
         if let Some(vao) = &self.vertex_array {
@@ -148,7 +146,7 @@ impl Pipeline {
 
             // Start shading with our program.
             shading_gate.shade(&mut self.program, |mut iface, uni, mut rdr_gate| {
-                iface.set(&uni.transform, to_4x4(&transform));
+                iface.set(&uni.window_dimensions, [window_dimensions[0] as f32, window_dimensions[1] as f32]);
                 iface.set(&uni.font_sampler, bound_texture.binding());
 
                 // Start rendering things with the default render state provided by luminance.
@@ -182,17 +180,12 @@ impl Pipeline {
         C: GraphicsContext<Backend = luminance_front::Backend>,
     {
         self.vertex_array = Some(
-            TessBuilder::new(ctx)
-                .set_instances(instances)
-                .set_vertex_nb(4)
-                .set_mode(Mode::TriangleStrip)
-                .build()
-                .unwrap(),
+        TessBuilder::new(ctx)
+            .set_instances(instances)
+            .set_vertex_nb(4)
+            .set_mode(Mode::TriangleStrip)
+            .build()
+            .unwrap(),
         );
     }
-}
-
-// From: https://github.com/rust-lang/rfcs/issues/1833
-fn to_4x4(array: &[f32; 16]) -> [[f32; 4]; 4] {
-    unsafe { *(array as *const _ as *const _) }
 }
